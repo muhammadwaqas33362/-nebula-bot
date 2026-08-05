@@ -16,7 +16,7 @@ def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add('💬 Chat AI', '🎨 Image', '🎬 Video')
     markup.add('💳 Buy $10 Lite', '💳 Buy $25 Pro')
-    bot.send_message(message.chat.id, "🚀 Welcome to NebulaAI 🚀\n\nLite $10/mo + Pro $25/mo\n3 Free trial messages hain", reply_markup=markup)
+    bot.send_message(message.chat.id, "🚀 *Welcome to NebulaAI* 🚀\n\n*Lite $10/mo* + *Pro $25/mo*\n3 Free trial messages hain", reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda m: m.text == '💬 Chat AI')
 def chat_ai(message):
@@ -24,19 +24,19 @@ def chat_ai(message):
 
 @bot.message_handler(func=lambda m: m.text == '🎨 Image')
 def img(message):
-    bot.send_message(message.chat.id, "Prompt bhejo image ke liye")
+    bot.send_message(message.chat.id, "Prompt bhejo image ke liye.\nExample: a cat in space")
 
 @bot.message_handler(func=lambda m: m.text == '🎬 Video')
 def vid(message):
-    bot.send_message(message.chat.id, "Prompt bhejo video ke liye")
+    bot.send_message(message.chat.id, "Prompt bhejo video ke liye.\nExample: dog running on beach")
 
 @bot.message_handler(func=lambda m: m.text == '💳 Buy $10 Lite')
 def buy10(message):
-    bot.send_message(message.chat.id, f"USDT bhej do: {USDT_WALLET}\n\nAmount: $10")
+    bot.send_message(message.chat.id, f"USDT bhej do: `{USDT_WALLET}`\n\nAmount: $10\nReceipt bhejte hi Lite on ho jayega", parse_mode="Markdown")
 
 @bot.message_handler(func=lambda m: m.text == '💳 Buy $25 Pro')
 def buy25(message):
-    bot.send_message(message.chat.id, f"USDT bhej do: {USDT_WALLET}\n\nAmount: $25")
+    bot.send_message(message.chat.id, f"USDT bhej do: `{USDT_WALLET}`\n\nAmount: $25\nReceipt bhejte hi Pro on ho jayega", parse_mode="Markdown")
 
 @bot.message_handler(content_types=['text'])
 def ai_reply(message):
@@ -44,11 +44,14 @@ def ai_reply(message):
         return
     try:
         client = openai.OpenAI(api_key=AGENTROUTER_KEY, base_url="https://agentrouter.org/")
-        res = client.chat.completions.create(model="gpt-4o", messages=[{"role":"user","content":message.text}])
+        res = client.chat.completions.create(
+            model="gpt-3.5-turbo-0125", # AgentRouter wala model ID
+            messages=[{"role":"user","content":message.text}]
+        )
         bot.send_message(message.chat.id, res.choices[0].message.content)
     except Exception as e:
-        bot.send_message(message.chat.id, f"AgentRouter Error:\n{e}")
-        print(f"FULL ERROR: {e}")
+        bot.send_message(message.chat.id, f"AgentRouter Error:\n{str(e)}")
+        print(f"FULL ERROR: {str(e)}")
 
 @app.route('/' + TOKEN, methods=['POST'])
 def webhook():
@@ -60,3 +63,6 @@ def set_webhook():
     bot.remove_webhook()
     bot.set_webhook(url=os.environ.get("WEBHOOK_URL") + "/" + TOKEN)
     return "Webhook set!", 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
