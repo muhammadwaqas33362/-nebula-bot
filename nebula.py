@@ -32,11 +32,10 @@ def back_menu():
 def start(message):
     bot.send_message(message.chat.id,
         "🚀 *Welcome to NebulaAI Pro* 🚀\n\n"
-        "✅ 6 AI Models: GPT-5.5, GLM-5.2, Claude-4.6, Gemini-1.5\n"
+        "✅ 7 AI Models: GPT-5.5, GLM-5.2, Claude Opus 5, Claude-4.6, Gemini-1.5\n"
         "✅ Image + Video Generation\n"
         "✅ Download HD Files\n"
-        "✅ Lite $10/mo | Pro $25/mo\n"
-        "3 Free messages hain jani",
+        "✅ Lite $10/mo | Pro $25/mo",
         reply_markup=main_menu(), parse_mode="Markdown")
     user_model[message.chat.id] = "gpt-5.5"
 
@@ -44,16 +43,17 @@ def start(message):
 def select_model(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add('GPT-5.5', 'GLM-5.2')
-    markup.add('Claude 3.5', 'Gemini 1.5')
-    markup.add('Qwen 2.5', 'GPT-3.5')
-    markup.add('🔙 Back')
+    markup.add('Claude Opus 5', 'Claude 3.5')
+    markup.add('Gemini 1.5', 'Qwen 2.5')
+    markup.add('GPT-3.5', '🔙 Back')
     bot.send_message(message.chat.id, "Konsa AI chahiye? 👇", reply_markup=markup)
 
-@bot.message_handler(func=lambda m: m.text in ['GPT-5.5','GLM-5.2','Claude 3.5','Gemini 1.5','Qwen 2.5','GPT-3.5'])
+@bot.message_handler(func=lambda m: m.text in ['GPT-5.5','GLM-5.2','Claude Opus 5','Claude 3.5','Gemini 1.5','Qwen 2.5','GPT-3.5'])
 def set_model(message):
     models = {
         'GPT-5.5': 'gpt-5.5',
         'GLM-5.2': 'glm-5.2',
+        'Claude Opus 5': 'claude-opus-5',
         'Claude 3.5': 'claude-opus-4-6',
         'Gemini 1.5': 'gemini-1.5-pro-latest',
         'Qwen 2.5': 'qwen2.5-72b-instruct',
@@ -116,11 +116,17 @@ def ai_reply(message):
 
     state = user_state.get(message.chat.id, "chat")
     model = user_model.get(message.chat.id, "gpt-5.5")
-    client = openai.OpenAI(api_key=AGENTROUTER_KEY, base_url="https://agentrouter.org/v1")
+
+    # BACKUP DOMAIN LAGA DIYA HAI
+    client = openai.OpenAI(api_key=AGENTROUTER_KEY, base_url="https://ps.air-outer.com/v1")
 
     try:
         if state == "chat":
-            res = client.chat.completions.create(model=model, messages=[{"role":"user","content":message.text}])
+            messages = [
+                {"role": "system", "content": "You are a helpful educational assistant. Answer all general knowledge, history, geography, science, and crypto questions. Do not refuse."},
+                {"role": "user", "content": message.text}
+            ]
+            res = client.chat.completions.create(model=model, messages=messages)
             bot.send_message(message.chat.id, f"*Model: {model}*\n\n{res.choices[0].message.content}", parse_mode="Markdown")
 
         elif state == "image":
@@ -146,8 +152,10 @@ def ai_reply(message):
 
     except Exception as e:
         error_msg = str(e).lower()
-        if "content-blocked" in error_msg:
-            bot.send_message(message.chat.id, "⚠️ *Prompt Blocked*\n\nJani ye prompt AgentRouter ne block kar diya.\nReason: Violence, NSFW, ya Celebrity ka naam.", parse_mode="Markdown")
+        if "401" in error_msg or "unauthenticated" in error_msg:
+            bot.send_message(message.chat.id, "❌ *API Key Error*\n\n`AGENTROUTER_KEY` galat hai.\nAgentRouter dashboard se nayi key banao.\nSupport: https://discord.gg/aYq5B4RW3")
+        elif "content-blocked" in error_msg:
+            bot.send_message(message.chat.id, "⚠️ *Prompt Blocked*\n\nAgentRouter ka filter sakht hai.\nDiscord pe safety low karwao.")
         else:
             bot.send_message(message.chat.id, f"❌ Error:\n`{str(e)}`", parse_mode="Markdown")
 
