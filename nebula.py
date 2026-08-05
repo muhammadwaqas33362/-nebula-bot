@@ -1,3 +1,26 @@
+import telebot
+from telebot import types
+from flask import Flask, request
+import os
+import openai
+
+TOKEN = os.environ.get("BOT_TOKEN")
+AGENTROUTER_KEY = os.environ.get("AGENTROUTER_KEY")
+USDT_WALLET = "0x4390c186a0B2b08b9423240D0719D2696a190a22"
+PRICE_LITE = 10
+PRICE_PRO = 25
+
+bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
+paid_users = {}
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add('💬 Chat AI', '🎨 Image', '🎬 Video')
+    markup.add('💳 Buy $10 Lite', '💳 Buy $25 Pro')
+    bot.send_message(message.chat.id, f"🚀 *Welcome to NebulaAI* 🚀\n\n*Lite $10/mo* + *Pro $25/mo*\n3 Free trial messages hain", reply_markup=markup, parse_mode="Markdown")
+
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     user_id = message.chat.id
@@ -28,3 +51,63 @@ def handle_text(message):
         bot.send_message(user_id, reply)
     except Exception as e:
         bot.send_message(user_id, f"Error: {e}")
+
+@bot.message_handler(func=lambda message: message.text == '🎨 Image')
+def image_request(message):
+    bot.send_message(message.chat.id, "Kaisi image chahiye? Prompt bhejo.\nExample: `a cat in space wearing glasses`")
+    bot.register_next_step_handler(message, generate_image)
+
+def generate_image(message):
+    prompt = message.text
+    bot.send_message(message.chat.id, "Image bana raha hun... 20 sec lagega ⏳")
+    try:
+        client = openai.OpenAI(
+            api_key=AGENTROUTER_KEY,
+            base_url="https://agentrouter.org/"
+        )
+        response = client.images.generate(
+            model="dall-e-3",
+            prompt=prompt,
+            n=1,
+            size="1024x1024"
+        )
+        image_url = response.data[0].url
+        bot.send_photo(message.chat.id, image_url)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Error: {e}")
+
+@bot.message_handler(func=lambda message: message.text == '🎬 Video')
+def video_request(message):
+    bot.send_message(message.chat.id, "Kaisi video chahiye? Prompt bhejo.\nExample: `a dog running on beach`")
+    bot.register_next_step_handler(message, generate_video)
+
+def generate_video(message):
+    prompt = message.text
+    bot.send_message(message.chat.id, "Video bana raha hun... ye 1-2 min lagega ⏳")
+    try:
+        client = openai.OpenAI(
+            api_key=AGENTROUTER_KEY,
+            base_url="https://agentrouter.org/"
+        )
+        response = client.video.generations.create(
+            model="veo-3",
+            prompt=prompt
+        )
+        video_url = response.data[0].url
+        bot.send_video(message.chat.id, video_url)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Video Error: {e}")
+
+@app.route('/' + TOKEN, methods=['POST'])
+def webhook():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "ok", 200
+
+@app.route("/")
+def set_webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=os.environ.get("WEBHOOK_URL") + "/" + TOKEN)
+    return "Webhook set!", 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
