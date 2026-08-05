@@ -54,8 +54,8 @@ def set_model(message):
     models = {
         'GPT-5.5': 'gpt-5.5',
         'GLM-5.2': 'glm-5.2',
-        'Claude 3.5': 'claude-opus-4-6', # AgentRouter ka sahi naam
-        'Gemini 1.5': 'gemini-1.5-pro-latest', # AgentRouter ka sahi naam
+        'Claude 3.5': 'claude-opus-4-6',
+        'Gemini 1.5': 'gemini-1.5-pro-latest',
         'Qwen 2.5': 'qwen2.5-72b-instruct',
         'GPT-3.5': 'gpt-3.5-turbo-0125'
     }
@@ -70,12 +70,12 @@ def chat_ai(message):
 @bot.message_handler(func=lambda m: m.text == '🎨 Image')
 def img(message):
     user_state[message.chat.id] = "image"
-    bot.send_message(message.chat.id, "Prompt bhejo image ke liye 🎨\nNote: Violence/NSFW/Celebrity block ho jayega", reply_markup=back_menu())
+    bot.send_message(message.chat.id, "Prompt bhejo image ke liye 🎨", reply_markup=back_menu())
 
 @bot.message_handler(func=lambda m: m.text == '🎬 Video')
 def vid(message):
     user_state[message.chat.id] = "video"
-    bot.send_message(message.chat.id, "Prompt bhejo video ke liye 🎬\nNote: Violence/NSFW/Celebrity block ho jayega", reply_markup=back_menu())
+    bot.send_message(message.chat.id, "Prompt bhejo video ke liye 🎬", reply_markup=back_menu())
 
 @bot.message_handler(func=lambda m: m.text == '💳 Buy $10 Lite')
 def buy10(message):
@@ -147,9 +147,7 @@ def ai_reply(message):
     except Exception as e:
         error_msg = str(e).lower()
         if "content-blocked" in error_msg:
-            bot.send_message(message.chat.id, "⚠️ *Prompt Blocked*\n\nJani ye prompt AgentRouter ne block kar diya.\nReason: Violence, NSFW, ya Celebrity ka naam.\n\nNaya safe prompt bhejo.", parse_mode="Markdown")
-        elif "model" in error_msg:
-            bot.send_message(message.chat.id, f"⚠️ *Model Error*\n\nYe model abhi available nahi hai.\n`{model}`\n\n`🤖 Select AI Model` se dusra try karo.", parse_mode="Markdown")
+            bot.send_message(message.chat.id, "⚠️ *Prompt Blocked*\n\nJani ye prompt AgentRouter ne block kar diya.\nReason: Violence, NSFW, ya Celebrity ka naam.", parse_mode="Markdown")
         else:
             bot.send_message(message.chat.id, f"❌ Error:\n`{str(e)}`", parse_mode="Markdown")
 
@@ -167,4 +165,4 @@ def set_webhook():
     return "Webhook set!", 200
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
