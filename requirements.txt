@@ -1,4 +1,6 @@
-flask
-pytelegrambotapi
+pyTelegramBotAPI
+Flask
 openai
+requests
 gunicorn
+python-dotenv
