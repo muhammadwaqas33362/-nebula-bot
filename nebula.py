@@ -6,7 +6,7 @@ import openai
 import requests
 
 TOKEN = os.environ.get("BOT_TOKEN")
-AGENTROUTER_KEY = os.environ.get("AGENTROUTER_KEY")
+AGENTROUTER_KEY = os.environ.get("AGENTROUTER_KEY") 
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 USDT_WALLET = "0x4390c186a0B2b08b9423240D0719D2696a190a22"
 
